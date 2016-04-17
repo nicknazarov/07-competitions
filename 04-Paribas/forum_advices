@@ -1,0 +1,26 @@
+To follow up on Nickel's comment, I am not suggesting encoding any relationship to the target value as a feature. I am suggesting mapping the value to "frequency of that value in the training set" and treating that integer as a categorical feature (the frequency may also work directly a numeric feature).
+
+In Python, using pandas, it looks like this in my code:
+
+cat_train = train[cat_cols]
+cat_test = test[cat_cols]
+
+# Transform v22 column to count-based category
+v22_freqs = dict( cat_train['v22'].value_counts() )
+cat_train.loc[:,'v22'] = [  ( 'C%d' % v22_freqs[s] ) for s in cat_train['v22'].values ]
+cat_test.loc[:,'v22'] = [  ( 'C%d' % v22_freqs.get(s,1) ) for s in cat_test['v22'].values ]
+. . . where train and test are pandas data frames, and cat_cols is an array of all the categorical variables (I am using a variation of script published here: https://www.kaggle.com/khaledfayed/bnp-paribas-cardif-claims-management/xgb-quick-hack1/code
+
+Essentially the above code just counts the occurrence of value, then replaces the whole column in place with a string based on the frequency. So the 7000+ items that each appear only once all get assigned new value "C1". Later on the script turns all the categorical variables into vectors for training, and because I substitute v22 with this new data, it doesn't expand so much that it causes problems.
+
+_________________________________________________________________________________________________________________
+
+Hi I try to set up the missForest package in R, It works for a sample of 10k lines, but seems very long for the whole dataset +6hours on laptop i7... If I succeed, I will post the completed dataset and see improvement in my score. Rgds Bruno https://cran.r-project.org/web/packages/missForest/missForest.pdf
+
+___________________________________________________________________________________________________________________
+
+https://kaggle2.blob.core.windows.net/forum-message-attachments/110284/3814/Dealing%20with%20NA.pdf?sv=2012-02-12&se=2016-04-20T16%3A03%3A15Z&sr=b&sp=r&sig=%2BTi0NJk2XuLl%2BYjrCIP7HGv5Vu5Up%2B6vHeT1T5xogUQ%3D
+
+__________________________________________________________________________________________________________
+
+
