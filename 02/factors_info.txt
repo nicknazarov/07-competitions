@@ -1,0 +1,12 @@
+v_38 mortage (or valubale of client)
+
+v_15 age
+
+saldo_v30
+
+var_36
+
+num_var5
+
+
+https://www.kaggle.com/c/santander-customer-satisfaction/forums/t/19291/data-dictionary?page=2
