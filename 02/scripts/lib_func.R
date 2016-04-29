@@ -146,7 +146,7 @@ count_levels <- function (dat){
 
 subSample <- function (x, pct, list_of_features){
   # х - лист с трейн и тест
-  dat <- x$train[,list_of_features]
+  dat <- x$train[,c(list_of_features, "TARGET")]
   inTrain <- createDataPartition(y = dat$TARGET,
                                  ## the outcome data are needed
                                  p = pct,
@@ -212,9 +212,15 @@ feature_eng <- function(x){
   x$flag_num_var22_hace3 <- ifelse(x$num_var22_hace3 ==0, 1, 0 )
   x$flag_num_op_var41_ult1 <- ifelse(x$num_op_var41_ult1 ==0, 1, 0 )
   x$flag_imp_op_var39_comer_ult3 <- ifelse(x$imp_op_var39_comer_ult3 ==0, 1, 0 )
-  x$flag_saldo_var37 <- ifelse(x$saldo_var37 ==0, 1, 0 )
+ # x$flag_saldo_var37 <- ifelse(x$saldo_var37 ==0, 1, 0 )
   x$flag_saldo_var8 <- ifelse(x$saldo_var8 <=0, 1, 0 )
   
+  
+  x$LowAge <- as.integer(x$var15  < 18)
+  x$Log.age <- log(x$var15)
+  x$Log.age[x$LowAge == 1] <- 0
+  x$var15  <- NULL
+
   x
 }
 

@@ -31,16 +31,15 @@ plot(list_of_features[,1])
 cat("Print hist for top factors\n")
 print_to_file_top_fact (PATH_2, x$train, top_N_features)
 
-data2learn <- subSample(x, PCT, list_of_features)
 
+data2learn <- subSample(x, PCT,top_N_features)
+
+training <- feature_eng(data2learn$training)
+testing <- feature_eng(data2learn$testing)
 
 #top_N_features
 
 
-
-dummyData = rep(c(1,2, 2, 2), 25)
-
-nrow(as.data.frame(table(dummyData))) 
 
 
 
