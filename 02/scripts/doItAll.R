@@ -36,8 +36,13 @@ data2learn <- subSample(x, PCT, list_of_features)
 
 #top_N_features
 
-temp <- x$train[ top_N_features]
-summary(x$test[ top_N_features])
+
+
+dummyData = rep(c(1,2, 2, 2), 25)
+
+nrow(as.data.frame(table(dummyData))) 
+
+
 
 
 

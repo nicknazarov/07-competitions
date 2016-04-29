@@ -5,6 +5,7 @@ libraryBoot <- function()
   library('ggplot2')
   library('caret')
   library('e1071')
+  library('pROC')
   return (TRUE)
 }
 
@@ -75,16 +76,25 @@ xform_data <- function(x, N_cat) {
   ### 5 #################################################
   #Факторизуем категориальные переменные
   factor.index <- c()
-  for(i in 1:ncol(train)){
-     if( length(unique(train[,i])) < N_cat){
+  # соединяем тест и трейн 
+  test$TARGET <- 2
+  all_data <- rbind(train, test)
+  
+  for(i in 1:ncol(all_data)){
+     #if( length(unique(train[,i])) < N_cat){    
+    if( grepl("ind_",names(all_data)[i]) || length(unique(all_data[,i])) < N_cat){ 
            factor.index <- c(factor.index, i)
      }
   }
   #factor.index
   for(i in 1:(length(factor.index)-1)){
-       train[,factor.index[i]] <- as.factor(train[,factor.index[i]])
-       test[,factor.index[i]] <- as.factor(test[,factor.index[i]])
+      all_data[,factor.index[i]] <- as.factor(all_data[,factor.index[i]])
+      # train[,factor.index[i]] <- as.factor(train[,factor.index[i]])
+      # test[,factor.index[i]] <- as.factor(test[,factor.index[i]])
   }
+  train <-  all_data[ all_data$TARGET !=2, ]
+  test <-  all_data[ all_data$TARGET ==2, ]
+  test <- test[ , !(names(test) %in% c("TARGET"))]
   train$TARGET <- as.factor(train$TARGET)
 
   #### 6 ###############################################
@@ -121,6 +131,17 @@ imp_features_rf <- function(x, for_seed){
 }
 
 
+count_levels <- function (dat){
+  #Количество уникальных значений в каждом столбце датафрейма
+  result <- data.frame(1,1) 
+  for( i in 1:ncol(dat)){
+   result[i,1] <- colnames(dat)[i]
+   result[i,2] <- length(unique(dat[,i]))
+  }
+  return (result[order(result[,2]),])
+}
+
+#t <- count_levels (temp)
 
 
 subSample <- function (x, pct, list_of_features){
@@ -155,3 +176,45 @@ print_to_file_top_fact <- function(PATH_2, train, list_of_factors){
   }
   dev.off()   
 }
+
+AUC <- function(train_actual, train_predicted, test_actual, test_predicted)
+{
+  train_auc<-auc(as.numeric(train_actual),as.numeric(train_predicted))
+  test_auc<-auc(as.numeric(test_actual),as.numeric(test_predicted))
+  cat("\n\n*** what ***\ntraining:")
+  print(train_auc)
+  cat("\ntesting:")
+  print(test_auc)
+  cat("\n*****************************\n")
+  list(train_auc=train_auc,test_auc=test_auc) 
+}
+
+
+feature_eng <- function(x){
+
+  summary(x)
+
+  x$flag_saldo_medio_var5_ult3 <- ifelse(x$saldo_medio_var5_ult3<=0, 1, 0 )  
+  x$flag_saldo_medio_var5_ult1 <- ifelse(x$saldo_medio_var5_ult1<=0, 1, 0 )  
+  x$flag_saldo_medio_var5_hace2 <- ifelse(x$saldo_medio_var5_hace2<=0, 1, 0 )  
+  x$flag_saldo_var5 <- ifelse(x$saldo_var5<=0, 1, 0 )  
+  x$flag_saldo_medio_var5_hace3 <- ifelse(x$saldo_medio_var5_hace3<=0, 1, 0 ) 
+  x$flag_imp_op_var41_efect_ult1 <- ifelse(x$imp_op_var41_efect_ult1==0, 1, 0 ) 
+  x$flag_imp_op_var41_efect_ult3 <- ifelse(x$imp_op_var41_efect_ult3==0, 1, 0 )
+  x$flag_num_med_var45_ult3 <- ifelse(x$num_med_var45_ult3==0, 1, 0 )
+  
+  x$flag_num_var22_ult1 <- ifelse(x$num_var22_ult1 ==0, 1, 0 )
+  x$flag_num_med_var22_ult3 <- ifelse(x$num_med_var22_ult3 ==0, 1, 0 )
+  x$flag_num_var45_hace3 <- ifelse(x$num_var45_hace3 ==0, 1, 0 )
+  x$flag_num_var22_hace2 <- ifelse(x$num_var22_hace2 ==0, 1, 0 )
+  x$flag_num_var45_ult1 <- ifelse(x$num_var45_ult1 ==0, 1, 0 )
+  x$flag_imp_op_var39_comer_ult1 <- ifelse(x$imp_op_var39_comer_ult1 ==0, 1, 0 )
+  x$flag_num_var22_hace3 <- ifelse(x$num_var22_hace3 ==0, 1, 0 )
+  x$flag_num_op_var41_ult1 <- ifelse(x$num_op_var41_ult1 ==0, 1, 0 )
+  x$flag_imp_op_var39_comer_ult3 <- ifelse(x$imp_op_var39_comer_ult3 ==0, 1, 0 )
+  x$flag_saldo_var37 <- ifelse(x$saldo_var37 ==0, 1, 0 )
+  x$flag_saldo_var8 <- ifelse(x$saldo_var8 <=0, 1, 0 )
+  
+  x
+}
+
