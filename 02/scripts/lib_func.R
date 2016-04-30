@@ -6,6 +6,8 @@ libraryBoot <- function()
   library('caret')
   library('e1071')
   library('pROC')
+  library('Matrix')
+  library('xgboost')
   return (TRUE)
 }
 
@@ -103,10 +105,25 @@ xform_data <- function(x, N_cat) {
   count0 <- function(x) {
          return( sum(x == 0) )
   }
-  train$n0 <- apply(train [, !(names(train) %in% c("TARGET"))], 1, FUN=count0)
-  test$n0 <- apply(test, 1, FUN=count0)
-
-
+  train$n0 <- apply(x$train [, !(names(x$train) %in% c("TARGET"))], 1, FUN=count0)
+  test$n0 <- apply(x$test, 1, FUN=count0)
+  
+  #### 8 ###############################################
+  ##### There is Mortage in this bank
+  #most popular value
+  v38 <- as.data.frame(table(train$var38))
+  v38 <- v38[order(v38[,2], decreasing = TRUE),]
+  v38[,1] <-  as.numeric(levels(v38[,1]))[v38[,1]]
+  train$flag_client_mort <- as.integer(train$var38 == v38[1,1])
+  test$flag_client_mort <- as.integer(test$var38 == v38[1,1])
+  
+  #### 7 ###############################################
+  ##### There is Mortage in this bank more than avarege
+  #most popular value
+  print(as.integer(v38[1,1]))
+  train$flag_big_mort <- as.integer(train$var38 > v38[1,1])
+  test$flag_big_mort <- as.integer(test$var38 > v38[1,1])
+  
  return (list(train = train, test = test))
 
 }
@@ -192,28 +209,60 @@ AUC <- function(train_actual, train_predicted, test_actual, test_predicted)
 
 feature_eng <- function(x){
 
-  summary(x)
-
-  x$flag_saldo_medio_var5_ult3 <- ifelse(x$saldo_medio_var5_ult3<=0, 1, 0 )  
+  #summary(x)
+  x$num_var42 <- as.integer(as.character(x$num_var42))
+  x$num_var4 <- as.integer(as.character(x$num_var4))
+  x$flag_num_var42 <- as.integer(x$num_var42 ==0)
+  x$flag_imp_op_var41_efect_ult1 <- as.integer(x$imp_op_var41_efect_ult1 ==0)
+  
+  #x$flag_saldo_medio_var5_ult3 <- ifelse(x$saldo_medio_var5_ult3<=0, 1, 0 )  
   x$flag_saldo_medio_var5_ult1 <- ifelse(x$saldo_medio_var5_ult1<=0, 1, 0 )  
   x$flag_saldo_medio_var5_hace2 <- ifelse(x$saldo_medio_var5_hace2<=0, 1, 0 )  
   x$flag_saldo_var5 <- ifelse(x$saldo_var5<=0, 1, 0 )  
-  x$flag_saldo_medio_var5_hace3 <- ifelse(x$saldo_medio_var5_hace3<=0, 1, 0 ) 
-  x$flag_imp_op_var41_efect_ult1 <- ifelse(x$imp_op_var41_efect_ult1==0, 1, 0 ) 
-  x$flag_imp_op_var41_efect_ult3 <- ifelse(x$imp_op_var41_efect_ult3==0, 1, 0 )
-  x$flag_num_med_var45_ult3 <- ifelse(x$num_med_var45_ult3==0, 1, 0 )
+  x$flag_imp_ent_var16_ult1 <- ifelse(x$imp_ent_var16_ult1==0, 1, 0 ) 
+  x$flag_num_med_var22_ult3 <- as.integer(x$num_med_var22_ult3 ==0)
   
-  x$flag_num_var22_ult1 <- ifelse(x$num_var22_ult1 ==0, 1, 0 )
-  x$flag_num_med_var22_ult3 <- ifelse(x$num_med_var22_ult3 ==0, 1, 0 )
-  x$flag_num_var45_hace3 <- ifelse(x$num_var45_hace3 ==0, 1, 0 )
-  x$flag_num_var22_hace2 <- ifelse(x$num_var22_hace2 ==0, 1, 0 )
-  x$flag_num_var45_ult1 <- ifelse(x$num_var45_ult1 ==0, 1, 0 )
-  x$flag_imp_op_var39_comer_ult1 <- ifelse(x$imp_op_var39_comer_ult1 ==0, 1, 0 )
-  x$flag_num_var22_hace3 <- ifelse(x$num_var22_hace3 ==0, 1, 0 )
-  x$flag_num_op_var41_ult1 <- ifelse(x$num_op_var41_ult1 ==0, 1, 0 )
-  x$flag_imp_op_var39_comer_ult3 <- ifelse(x$imp_op_var39_comer_ult3 ==0, 1, 0 )
+  
+  
+  
+  #x$flag_imp_sal_var16_ult1 <- as.integer(x$imp_sal_var16_ult1==0)
+  x$flag_num_med_var45_ult3 <- as.integer(x$num_med_var45_ult3==0)
+  x$flag_imp_op_var40_comer_ult1 <- as.integer(x$imp_op_var40_comer_ult1==0)
+  x$flag_imp_op_var39_comer_ult3 <- as.integer(x$imp_op_var39_comer_ult3==0)
+  #x$flag_imp_reemb_var17_ult1 <- as.integer(x$imp_reemb_var17_ult1==0)
+  x$flag_imp_trans_var37_ult1 <- as.integer(x$imp_trans_var37_ult1==0)
+  x$flag_num_var43_recib_ult1  <- as.integer(x$num_var43_recib_ult1 ==0)
+  
+  
+  x$imp_ent_var16_ult1 <- NULL #3719
+  #x$num_med_var22_ult3 <- NULL #11254
+ # x$num_med_var45_ult3 <- NULL
+  
+  x$imp_op_var40_comer_ult1 <- NULL#295
+  
+ # x$imp_op_var39_comer_ult3 <- NULL#11690
+ # x$imp_reemb_var17_ult1 <- NULL#20
+  #x$imp_trans_var37_ult1 <- NULL#9830
+  
+ # x$num_var43_recib_ult1  <- NULL #9830
+
+  
+  #sum( x$train$imp_op_var40_comer_ult1     > 0) 
+  
+  #x$flag_imp_op_var41_efect_ult3 <- ifelse(x$imp_op_var41_efect_ult3==0, 1, 0 )
+  #x$flag_num_med_var45_ult3 <- ifelse(x$num_med_var45_ult3==0, 1, 0 )
+  
+  #x$flag_num_var22_ult1 <- ifelse(x$num_var22_ult1 ==0, 1, 0 )
+  #x$flag_num_med_var22_ult3 <- ifelse(x$num_med_var22_ult3 ==0, 1, 0 )
+  #x$flag_num_var45_hace3 <- ifelse(x$num_var45_hace3 ==0, 1, 0 )
+  #x$flag_num_var22_hace2 <- ifelse(x$num_var22_hace2 ==0, 1, 0 )
+  #x$flag_num_var45_ult1 <- ifelse(x$num_var45_ult1 ==0, 1, 0 )
+  #x$flag_imp_op_var39_comer_ult1 <- ifelse(x$imp_op_var39_comer_ult1 ==0, 1, 0 )
+  #x$flag_num_var22_hace3 <- ifelse(x$num_var22_hace3 ==0, 1, 0 )
+  #x$flag_num_op_var41_ult1 <- ifelse(x$num_op_var41_ult1 ==0, 1, 0 )
+  #x$flag_imp_op_var39_comer_ult3 <- ifelse(x$imp_op_var39_comer_ult3 ==0, 1, 0 )
  # x$flag_saldo_var37 <- ifelse(x$saldo_var37 ==0, 1, 0 )
-  x$flag_saldo_var8 <- ifelse(x$saldo_var8 <=0, 1, 0 )
+  #x$flag_saldo_var8 <- ifelse(x$saldo_var8 <=0, 1, 0 )
   
   
   x$LowAge <- as.integer(x$var15  < 18)
@@ -221,6 +270,70 @@ feature_eng <- function(x){
   x$Log.age[x$LowAge == 1] <- 0
   x$var15  <- NULL
 
+  summary(x)
   x
 }
 
+
+imp_features_xgboost <- function(x, for_seed){
+  
+  set.seed(for_seed)
+  options(scipen=999)
+  
+  train <- x$train
+  test <- x$test
+  #str(dtrain)
+  
+  train$TARGET <- as.integer(as.character(train$TARGET)) 
+  test$TARGET <- -1
+  # ---------------------------------------------------
+  # Features
+  feature.names <- names(train)
+  feature.names <- feature.names[-grep('^ID$', feature.names)]
+  feature.names <- feature.names[-grep('^TARGET$', feature.names)]
+  feature.formula <- formula(paste('TARGET ~ ', paste(feature.names, collapse = ' + '), sep = ''))
+  
+  
+  # ---------------------------------------------------
+  # Matrix
+  indexes <- sample(seq_len(nrow(train)), floor(nrow(train)*0.85))
+  
+  data <- sparse.model.matrix(feature.formula, data = train[indexes, ])
+  sparseMatrixColNamesTrain <- colnames(data)
+  dtrain <- xgb.DMatrix(data, label = train[indexes, 'TARGET'])
+  rm(data)
+  dvalid <- xgb.DMatrix(sparse.model.matrix(feature.formula, data = train[-indexes, ]),
+                        label = train[-indexes, c('TARGET')])
+  dtest <- sparse.model.matrix(feature.formula, data = test)
+  
+  watchlist <- list(valid = dvalid, train = dtrain)
+  
+  # ---------------------------------------------------
+  # XGBOOST
+  params <- list(booster = "gbtree", objective = "binary:logistic",
+                 max_depth = 8, eta = 0.05,
+                 colsample_bytree = 0.65, subsample = 0.95)
+  model <- xgb.train(params = params, data = dtrain,
+                     nrounds = 500, early.stop.round = 50,
+                     eval_metric = 'auc', maximize = T,
+                     watchlist = watchlist, print.every.n = 10)
+  
+  pred <- predict(model, dtest)
+  
+  # ---------------------------------------------------
+  # SAVE
+  submission <- data.frame(ID = test$ID, TARGET = pred)
+  write.csv(submission, 'imp_xgboost_first_simple.csv', row.names=FALSE, quote = FALSE)
+  
+  # Compute feature importance matrix
+  importance_matrix <- xgb.importance(feature.names, model = model)
+  # Nice graph
+  #xgb.plot.importance(importance_matrix[1:10,])
+  
+  #test <- chisq.test(train$Age, output_vector)
+  #print(test)
+  
+  #print(importance_matrix[1:30,])
+  save(importance_matrix ,file="importance_xgboost.RDA")
+  importance_matrix
+}
