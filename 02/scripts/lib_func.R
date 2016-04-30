@@ -8,6 +8,7 @@ libraryBoot <- function()
   library('pROC')
   library('Matrix')
   library('xgboost')
+  library('doMC')
   return (TRUE)
 }
 
@@ -265,10 +266,10 @@ feature_eng <- function(x){
   #x$flag_saldo_var8 <- ifelse(x$saldo_var8 <=0, 1, 0 )
   
   
-  x$LowAge <- as.integer(x$var15  < 18)
-  x$Log.age <- log(x$var15)
-  x$Log.age[x$LowAge == 1] <- 0
-  x$var15  <- NULL
+ # x$LowAge <- as.integer(x$var15  < 18)
+ # x$Log.age <- log(x$var15)
+ # x$Log.age[x$LowAge == 1] <- 0
+ # x$var15  <- NULL
 
   summary(x)
   x

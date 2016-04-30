@@ -12,7 +12,7 @@ library(caret)
 
 
 # prepare training scheme
-control <- trainControl(method="repeatedcv", number=10, repeats=3, search="grid")
+control <- trainControl(method="repeatedcv", number=5, repeats=3, search="grid")
 training$TARGET <- as.factor(training$TARGET)
 # train the model
 tunegrid <- expand.grid(.mtry=c(1:15))

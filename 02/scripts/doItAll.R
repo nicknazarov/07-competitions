@@ -60,7 +60,8 @@ top_N_features <- top_N_features[!(top_N_features %in% c("imp_op_var41_efect_ult
                                                          "imp_op_var39_comer_ult1","saldo_medio_var5_ult3",
                                                          " num_venta_var44_ult1","imp_reemb_var17_ult1 ")) ]
                 
- 
+
+
 #top_N_features               
 data2learn <- subSample(x, PCT, top_N_features)
 
@@ -70,35 +71,22 @@ testing <- feature_eng(data2learn$testing)
 #top_N_features
 summary(training)
 
+week_factors <- c(
+"flag_imp_ent_var16_ult1",  "flag_imp_op_var41_efect_ult1",  
+"flag_imp_op_var39_comer_ult3","flag_num_med_var45_ult3",          
+"imp_sal_var16_ult1" ,  "flag_imp_trans_var37_ult1"  ,      
+"flag_num_var43_recib_ult1",  "flag_imp_op_var40_comer_ult1" ,
+"imp_reemb_var17_ult1",   "ind_var13_largo_0",               
+"ind_var31_0", "num_meses_var13_largo_ult3"  ,   "num_venta_var44_ult1")               
 
 
+tun_train <-feature_eng(x$train[,c(top_N_features, "TARGET" )])
+tun_test <-feature_eng(x$test[,top_N_features])
 
+tun_train <- tun_train[ ,!(colnames(tun_train) %in% week_factors) ]
+tun_test <- tun_test[ ,!(colnames(tun_test) %in% week_factors) ]
 
+#save(tun_train, file="tun_train.RDA")
+#save(tun_test, file="tun_test.RDA")
 
-
-
-
-
-cat("Building Model\n")
-print(system.time(
-  subm <- buildSubModels(d$training, d$testing)
-))
-m <- buildModels(subm, d$testing)
-
-model.results <- list(d=d, m=m)
-subm <- NULL
-m <- NULL
-d <- NULL
-gc()
-print(system.time(save(model.results, file='submission.rda')))
-gc()
-
-evalResults.GiveMeCredit(model.results$m, model.results$d$training,
-                         model.results$d$testing)
-gc()
-
-cat("Making Submission\n")
-print(system.time(makeSubmission.GiveMeCredit(model.results$m)))
-cat("Saving\n")
-gc()
-model.results
+#######################################################################################
