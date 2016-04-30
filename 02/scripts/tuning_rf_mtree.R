@@ -1,4 +1,6 @@
 
+install.packages("caret")
+install.packages("doMC")
 library('caret')
 library('doMC')
 
