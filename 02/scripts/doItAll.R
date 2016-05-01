@@ -90,3 +90,26 @@ tun_test <- tun_test[ ,!(colnames(tun_test) %in% week_factors) ]
 #save(tun_test, file="tun_test.RDA")
 
 #######################################################################################
+
+load('rfensemble.RDA')
+
+#str(rfensemble)
+load('tun_test.RDA')
+#rfensemble$rf1
+predicts <- list()
+i <-1
+  for(rf in rfensemble){
+    predicts[i] <- predict(rf, tun_test)
+    i <- i+1
+  }
+  
+predict(rfensemble$rf1, tun_test) 
+
+
+setdiff(names(tun_train),names(tun_test ))
+
+
+# ---------------------------------------------------
+# SAVE
+submission <- data.frame(ID = test$ID, TARGET = pred)
+write.csv(submission, 'xgboost_first_simple.csv', row.names=FALSE, quote = FALSE)
