@@ -1,9 +1,10 @@
-
+install.packages('iterators', repos='http://cran.us.r-project.org', lib= "~/") 
 install.packages('foreach', repos='http://cran.us.r-project.org', lib= "~/") 
 install.packages('doMC', repos='http://cran.us.r-project.org', lib= "~/") 
 install.packages('e1071', repos='http://cran.us.r-project.org', lib= "~/") 
 install.packages('caret', repos='http://cran.us.r-project.org', lib= "~/") 
 
+library('iterators', lib.loc = "~/")
 library('foreach', lib.loc = "~/")
 library('doMC' , lib.loc = "~/")
 library('e1071' , lib.loc = "~/")

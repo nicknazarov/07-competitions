@@ -113,3 +113,29 @@ setdiff(names(tun_train),names(tun_test ))
 # SAVE
 submission <- data.frame(ID = test$ID, TARGET = pred)
 write.csv(submission, 'xgboost_first_simple.csv', row.names=FALSE, quote = FALSE)
+
+#######################################################################################
+
+
+
+
+
+load(file='rfensemble2.RDA')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
