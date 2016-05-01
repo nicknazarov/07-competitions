@@ -1,11 +1,13 @@
-
+install.packages('iterators', repos='http://cran.us.r-project.org', lib= "~/") 
 install.packages('randomForest', repos='http://cran.us.r-project.org', lib= "~/") 
 install.packages('foreach', repos='http://cran.us.r-project.org', lib= "~/") 
 install.packages('doMC', repos='http://cran.us.r-project.org', lib= "~/") 
 
+library(iterators, lib.loc = "~/")
 library(randomForest, lib.loc = "~/")
 library(foreach, lib.loc = "~/")
 library('doMC' , lib.loc = "~/")
+
 registerDoMC(cores=4)   
 load('tun_train.RDA')
 set.seed(1234)
