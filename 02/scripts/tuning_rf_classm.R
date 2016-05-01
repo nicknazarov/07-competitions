@@ -1,9 +1,11 @@
 
 install.packages('randomForest', repos='http://cran.us.r-project.org', lib= "~/") 
 install.packages('foreach', repos='http://cran.us.r-project.org', lib= "~/") 
+install.packages('doMC', repos='http://cran.us.r-project.org', lib= "~/") 
 
 library(randomForest, lib.loc = "~/")
 library(foreach, lib.loc = "~/")
+library('doMC' , lib.loc = "~/")
 
 load('tun_train.RDA')
 set.seed(1234)
@@ -15,7 +17,7 @@ buildRFModel <- function(training, pctDeadbeat) {
   # can run multiple processes with as little memory as possible.
   gc(reset=TRUE)
   cat("\n**************\n\nRF pctDeadbeat=",pctDeadbeat,"\n\n***********\n\n")
-  RF <- foreach(ntree=rep(300,4), .combine=combine,
+  RF <- foreach(ntree=rep(200,4), .combine=combine,
                 .multicombine=TRUE,
                 .packages="randomForest") %dopar% {
                   tun_train.target <- as.integer(as.character(tun_train$TARGET))
@@ -35,7 +37,7 @@ buildRFModel <- function(training, pctDeadbeat) {
 
 buildRFModelEnsemble <- function(training) {
   # rf2 was less important in final model
-  rfensemble<-lapply(list(rf1=0.1,
+  rfensemble<-mclapply(list(rf1=0.1,
                           rf2=0.25,
                           rf3=0.375,
                           rf4=0.5,

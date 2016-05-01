@@ -3,11 +3,12 @@
 install.packages('doMC', repos='http://cran.us.r-project.org', lib= "~/") 
 install.packages('e1071', repos='http://cran.us.r-project.org', lib= "~/") 
 install.packages('caret', repos='http://cran.us.r-project.org', lib= "~/") 
-
+install.packages('foreach', repos='http://cran.us.r-project.org', lib= "~/") 
 
 library('doMC' , lib.loc = "~/")
 library('e1071' , lib.loc = "~/")
 library('caret' , lib.loc = "~/")
+library('foreach', lib.loc = "~/")
 # configure multicore
 registerDoMC(cores=4)   
 #load('tun_train.RDA')
