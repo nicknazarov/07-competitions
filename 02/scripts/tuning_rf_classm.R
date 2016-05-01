@@ -6,7 +6,7 @@ install.packages('doMC', repos='http://cran.us.r-project.org', lib= "~/")
 library(randomForest, lib.loc = "~/")
 library(foreach, lib.loc = "~/")
 library('doMC' , lib.loc = "~/")
-
+registerDoMC(cores=4)   
 load('tun_train.RDA')
 set.seed(1234)
 
