@@ -10,8 +10,10 @@ library('e1071' , lib.loc = "~/")
 library('caret' , lib.loc = "~/")
 # configure multicore
 registerDoMC(cores=4)   
-load('tun_train.RDA')
-load('tun_test.RDA')
+#load('tun_train.RDA')
+#load('tun_test.RDA')
+load('tun_all.RDA')
+
 set.seed(1234)
 
 data_preprocess <- function(training, testing) {
@@ -54,6 +56,8 @@ buildSVMEnsemble <- function(training) {
 
 }
 
+tun_train <- tun_all$train
+tun_test <- tun_all$test
 
 data_scaling   <- data_preprocess (tun_train, tun_test)
 
@@ -64,5 +68,6 @@ svm_data <- list(train= data_scaling$train, test = data_scaling$test, preprocess
 
 save(svm_data,file='svm_data.RDA')
 
-
+#tun_all <- list(train =tun_train , test= tun_test)
+#save(tun_all,file='tun_all.RDA')
 
