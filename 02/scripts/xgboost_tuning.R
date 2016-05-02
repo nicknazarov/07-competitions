@@ -1,63 +1,74 @@
+library(caret)
+library(xgboost)
+library(readr)
+library(dplyr)
+library(tidyr)
 
-imp_features_xgboost <- function(x, for_seed){
-  
-  set.seed(for_seed)
-  options(scipen=999)
-  
-  train <- x$train
-  test <- x$test
-  #str(dtrain)
-  
-  train$TARGET <- as.integer(as.character(train$TARGET)) 
-  test$TARGET <- -1
-  # ---------------------------------------------------
-  # Features
-  feature.names <- names(train)
-  feature.names <- feature.names[-grep('^ID$', feature.names)]
-  feature.names <- feature.names[-grep('^TARGET$', feature.names)]
-  feature.formula <- formula(paste('TARGET ~ ', paste(feature.names, collapse = ' + '), sep = ''))
-  
-  
-  # ---------------------------------------------------
-  # Matrix
-  indexes <- sample(seq_len(nrow(train)), floor(nrow(train)*0.85))
-  
-  data <- sparse.model.matrix(feature.formula, data = train[indexes, ])
-  sparseMatrixColNamesTrain <- colnames(data)
-  dtrain <- xgb.DMatrix(data, label = train[indexes, 'TARGET'])
-  rm(data)
-  dvalid <- xgb.DMatrix(sparse.model.matrix(feature.formula, data = train[-indexes, ]),
-                        label = train[-indexes, c('TARGET')])
-  dtest <- sparse.model.matrix(feature.formula, data = test)
-  
-  watchlist <- list(valid = dvalid, train = dtrain)
-  
-  # ---------------------------------------------------
-  # XGBOOST
-  params <- list(booster = "gbtree", objective = "binary:logistic",
-                 max_depth = 8, eta = 0.05,
-                 colsample_bytree = 0.65, subsample = 0.95)
-  model <- xgb.train(params = params, data = dtrain,
-                     nrounds = 500, early.stop.round = 50,
-                     eval_metric = 'auc', maximize = T,
-                     watchlist = watchlist, print.every.n = 10)
-  
-  pred <- predict(model, dtest)
-  
-  # ---------------------------------------------------
-  # SAVE
-  submission <- data.frame(ID = test$ID, TARGET = pred)
-  write.csv(submission, 'imp_xgboost_first_simple.csv', row.names=FALSE, quote = FALSE)
-  
-  # Compute feature importance matrix
-  importance_matrix <- xgb.importance(feature.names, model = model)
-  # Nice graph
-  #xgb.plot.importance(importance_matrix[1:10,])
-  
-  #test <- chisq.test(train$Age, output_vector)
-  #print(test)
-  
-  #print(importance_matrix[1:30,])
-  save(importance_matrix ,file="importance_xgboost.RDA")
-  importance_matrix
-}
+# load in the training data
+df_train = read_csv("04-GiveMeSomeCredit/Data/cs-training.csv") %>%
+  na.omit() %>%                                                            
+  # listwise deletion 
+  select(-`[EMPTY]`) %>%
+  mutate(SeriousDlqin2yrs = factor(SeriousDlqin2yrs,                   
+                                   # factor variable for classification
+                                   labels = c("Failure", "Success")))
+
+# xgboost fitting with arbitrary parameters
+xgb_params_1 = list(
+  objective = "binary:logistic",                                              
+  # binary classification
+  eta = 0.01,                                                                 
+  # learning rate
+  max.depth = 3,                                                               
+  # max tree depth
+  eval_metric = "auc"                                                          
+  # evaluation/loss metric
+)
+
+# fit the model with the arbitrary parameters specified above
+xgb_1 = xgboost(data = as.matrix(df_train %>%
+                                   select(-SeriousDlqin2yrs)),
+                label = df_train$SeriousDlqin2yrs,
+                params = xgb_params_1,
+                nrounds = 100,                                                
+                # max number of trees to build
+                verbose = TRUE,                                         
+                print.every.n = 1,
+                early.stop.round = 10                                          
+                # stop if no improvement within 10 trees
+)
+
+# cross-validate xgboost to get the accurate measure of error
+xgb_cv_1 = xgb.cv(params = xgb_params_1,
+                  data = as.matrix(df_train %>%
+                                     select(-SeriousDlqin2yrs)),
+                  label = df_train$SeriousDlqin2yrs,
+                  nrounds = 100, 
+                  nfold = 5,                                                   
+                  # number of folds in K-fold
+                  prediction = TRUE,                                           
+                  # return the prediction using the final model 
+                  showsd = TRUE,                                               
+                  # standard deviation of loss across folds
+                  stratified = TRUE,                                           
+                  # sample is unbalanced; use stratified sampling
+                  verbose = TRUE,
+                  print.every.n = 1, 
+                  early.stop.round = 10
+)
+
+# plot the AUC for the training and testing samples
+xgb_cv_1$dt %>%
+  select(-contains("std")) %>%
+  select(-contains("std")) %>%
+  mutate(IterationNum = 1:n()) %>%
+  gather(TestOrTrain, AUC, -IterationNum) %>%
+  ggplot(aes(x = IterationNum, y = AUC, group = TestOrTrain, color = TestOrTrain)) + 
+  geom_line() + 
+  theme_bw()
+
+
+
+
+
+modelLookup("logistic")

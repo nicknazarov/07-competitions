@@ -39,7 +39,7 @@ buildRFModel <- function(training, pctDeadbeat) {
 
 buildRFModelEnsemble <- function(training) {
   # rf2 was less important in final model
-  rfensemble <-lapply(list(rf1=0.0,
+  rfensemble <-lapply(list(rf1=0.005,
                           rf2=0.01,
                           rf3=0.03,
                           rf4=0.05,

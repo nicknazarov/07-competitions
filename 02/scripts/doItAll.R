@@ -95,6 +95,7 @@ load('rfensemble.RDA')
 
 #str(rfensemble)
 load('tun_test.RDA')
+load('tun_train.RDA')
 #rfensemble$rf1
 predicts <- list()
 i <-1
@@ -151,6 +152,28 @@ pred <- predict (rfensemble$rf4,tun_test, type="prob")
 submission <- data.frame(ID = x_raw$test$ID, TARGET = pred[,2])
 write.csv(submission, 'rf_4.csv', row.names=FALSE, quote = FALSE)
 
+########################################################################################
+load('svm_data.RDA')
 
+model <-svm_data$svmensemble$svm1
+
+
+# alternatively the traditional interface:
+x <- subset(iris, select = -Species)
+y <- Species
+model <- svm(x, y, probability = TRUE) 
+
+print(model)
+summary(model)
+
+# test with train data
+pred <- predict(model, x)
+# (same as:)
+pred <- fitted(model)
+
+
+
+
+#auc(as.numeric(as.character(tun_train$TARGET)), rep(0.9,nrow(tun_train)) )
 
 
