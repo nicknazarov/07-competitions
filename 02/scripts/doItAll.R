@@ -107,7 +107,7 @@ predict(rfensemble$rf1, tun_test)
 
 
 setdiff(names(tun_train),names(tun_test ))
-
+rm(rfensemble)
 
 # ---------------------------------------------------
 # SAVE
@@ -120,21 +120,36 @@ write.csv(submission, 'xgboost_first_simple.csv', row.names=FALSE, quote = FALSE
 
 
 
-load(file='rfensemble2.RDA')
+load(file='rfensemble_300.RDA')
+
+varImpPlot(rfensemble$rf1)
+
+print(rfensemble$rf2$mtry )
+
+rfensemble$rf1$confusion[, 'class.error']
+
+OOB.votes <- predict (rfensemble$rf1,tun_train)
+
+formatrix <- table (OOB.votes ,as.factor(tun_train$TARGET))
+confusionMatrix(formatrix)
 
 
 
+OOB.votes <- predict (rfensemble$rf4,tun_train,type="prob")
+OOB.pred <- OOB.votes[,2];
+#OOB.pred [1:10]
+train_auc <-auc(as.numeric(as.character(tun_train$TARGET)), OOB.pred )
+print(train_auc)
+#Area under the curve: 0.8398
+#Area under the curve: 0.8398
+#Area under the curve: 0.8278
+#Area under the curve: 0.8242
+#Area under the curve: 0.8221
 
-
-
-
-
-
-
-
-
-
-
+pred <- predict (rfensemble$rf4,tun_test, type="prob")
+# SAVE
+submission <- data.frame(ID = x_raw$test$ID, TARGET = pred[,2])
+write.csv(submission, 'rf_4.csv', row.names=FALSE, quote = FALSE)
 
 
 

@@ -30,7 +30,7 @@ buildRFModel <- function(training, pctDeadbeat) {
                   
                   randomForest(TARGET ~ .,training,
                                ntree=ntree,
-                               strata=factor( tun_train.target),
+                               strata=factor( tun_train.target), mtry =2,
                                do.trace=TRUE, importance=TRUE, forest=TRUE,
                                replace=TRUE, classwt=classwt)
                 }
@@ -45,7 +45,7 @@ buildRFModelEnsemble <- function(training) {
                           rf4=0.5,
                           rf5=0.625),
                      function(pctDeadbeat) buildRFModel(training, pctDeadbeat))
-  save(rfensemble,file='rfensemble2.RDA')
+  save(rfensemble,file='rfensemble_mtree_2.RDA')
   #rfensemble
 }
 
