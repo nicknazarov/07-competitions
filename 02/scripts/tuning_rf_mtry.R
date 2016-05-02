@@ -39,8 +39,8 @@ buildRFModel <- function(training, mtry_, coeff) {
 
 buildRFModelEnsemble <- function(training, coeff) {
   # rf2 was less important in final model
-  rfensemble <-lapply(list(rf1=2,
-                           rf2=5,
+  rfensemble <-lapply(list(rf1=3,
+                           rf2=4,
                            rf3=8,
                            rf4=10,
                            rf5=16),
