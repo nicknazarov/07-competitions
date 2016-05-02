@@ -45,7 +45,7 @@ buildRFModelEnsemble <- function(training) {
                           rf4=0.05,
                           rf5=0.08),
                      function(pctDeadbeat) buildRFModel(training, pctDeadbeat))
-  save(rfensemble,file='rfensemble_mtree_2.RDA')
+  save(rfensemble,file='rfensemble_mtree_2_classmt.RDA')
   #rfensemble
 }
 
