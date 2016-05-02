@@ -73,3 +73,5 @@ save(svm_data,file='svm_data.RDA')
 #tun_all <- list(train =tun_train , test= tun_test)
 #save(tun_all,file='tun_all.RDA')
 
+
+
