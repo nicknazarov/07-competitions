@@ -123,7 +123,7 @@ write.csv(submission, 'xgboost_first_simple.csv', row.names=FALSE, quote = FALSE
 
 load(file='rfensemble_mtree_2_classmt.RDA')
 
-varImpPlot(rfensemble$rf1)
+varImpPlot(rfensemble$rf2)
 
 print(rfensemble$rf2$mtry )
 
@@ -136,7 +136,7 @@ confusionMatrix(formatrix)
 
 
 
-OOB.votes <- predict (rfensemble$rf4,tun_train,type="prob")
+OOB.votes <- predict (rfensemble$rf2,tun_train,type="prob")
 OOB.pred <- OOB.votes[,2];
 #OOB.pred [1:10]
 train_auc <-auc(as.numeric(as.character(tun_train$TARGET)), OOB.pred )
@@ -181,14 +181,15 @@ print(model)
 summary(model)
 
 # test with train data
-pred <- predict(model, x)
+pred <- predict(model, data_scaling$test, probability = TRUE)
 # (same as:)
 pred <- fitted(model)
 
+head(attr(pred, "probabilities"),100)
+pred[1:100]
 
-
-
-#auc(as.numeric(as.character(tun_train$TARGET)), rep(0.9,nrow(tun_train)) )
+#
+auc(as.numeric(as.character(tun_train$TARGET)), attr(pred, "probabilities")[,2] )
 
 #############################################################################
 

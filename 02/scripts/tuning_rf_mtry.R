@@ -13,7 +13,7 @@ load('tun_train.RDA')
 set.seed(1234)
 
 
-buildRFModel <- function(training, mtry_) {
+buildRFModel <- function(training, mtry_, coeff) {
   
   # GC multiple times to force memory back to the OS, so we
   # can run multiple processes with as little memory as possible.
@@ -24,8 +24,8 @@ buildRFModel <- function(training, mtry_) {
                 .packages="randomForest") %dopar% {
                   tun_train.target <- as.integer(as.character(tun_train$TARGET))
                   training <- tun_train
-                  classwt <- c((1-0.06)/sum( tun_train.target == 0),
-                               0.06/sum( tun_train.target == 1)) *
+                  classwt <- c((1-coeff)/sum( tun_train.target == 0),
+                               coeff/sum( tun_train.target == 1)) *
                     nrow(training)
                   
                   randomForest(TARGET ~ .,training,
@@ -37,20 +37,22 @@ buildRFModel <- function(training, mtry_) {
   RF
 }
 
-buildRFModelEnsemble <- function(training) {
+buildRFModelEnsemble <- function(training, coeff) {
   # rf2 was less important in final model
   rfensemble <-lapply(list(rf1=2,
                            rf2=5,
                            rf3=8,
                            rf4=10,
                            rf5=16),
-                      function(mtry_) buildRFModel(training, mtry_))
+                      function(mtry_) buildRFModel(training, mtry_, coeff))
   save(rfensemble,file='rfensemble_mtry.RDA')
   #rfensemble
 }
 
+args <- commandArgs(trailingOnly = TRUE)
+coeff <- as.numeric(args[1])
 
-buildRFModelEnsemble(tun_train)
+buildRFModelEnsemble(tun_train, coeff)
 
 
 #list(rf1=0.1,
