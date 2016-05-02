@@ -176,4 +176,15 @@ pred <- fitted(model)
 
 #auc(as.numeric(as.character(tun_train$TARGET)), rep(0.9,nrow(tun_train)) )
 
+#############################################################################
 
+load('tun_train.RDA')
+set.seed(1)
+sub_train <-createDataPartition(y = tun_train$TARGET,
+                                ## the outcome data are needed
+                                p = .1,
+                                ## The percentage of data in the
+                                ## training set
+                                list = FALSE)
+tr <- trainControl(method = "cv", number = 5)
+train(TARGET ~ .,data=tun_train[sub_train,] ,method="rf",trControl= tr)
