@@ -3,11 +3,13 @@ install.packages('iterators', repos='http://cran.us.r-project.org', lib= "~/")
 install.packages('caret', repos='http://cran.us.r-project.org', lib= "~/",dep=TRUE) 
 install.packages('foreach', repos='http://cran.us.r-project.org', lib= "~/",dep=TRUE) 
 install.packages('doMC', repos='http://cran.us.r-project.org', lib= "~/",dep=TRUE) 
+install.packages('randomForest', repos='http://cran.us.r-project.org', lib= "~/",dep=TRUE) 
 
 library('iterators', lib.loc = "~/")
 library('caret', lib.loc = "~/")
 library('foreach', lib.loc = "~/")
 library('doMC',  lib.loc = "~/")
+library('randomForest', lib.loc = "~/")
 
 registerDoMC(cores=4)  
 
