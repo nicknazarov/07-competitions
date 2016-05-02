@@ -27,7 +27,7 @@ data_preprocess <- function(training, testing) {
 
   training <- predict(preprocess, training)
   #print(summary(training$TARGET <- target))
-  #training$TARGET <- target
+  training$TARGET <- target
   target <- NULL
   
   testing <- predict(preprocess, testing)
@@ -45,7 +45,7 @@ buildSVM <- function(training, cost=1) {
   gc()
   weight <- c(1/(1-weight), 1/weight)
   names(weight) <- levels(response)
-  
+  training$TARGET <- NULL
   # already scaled
   svm(training, response, scale=FALSE, type='C-classification',
       kernel='radial', cachesize=4000, probability=TRUE,
