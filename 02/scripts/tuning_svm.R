@@ -73,5 +73,14 @@ save(svm_data,file='svm_data.RDA')
 #tun_all <- list(train =tun_train , test= tun_test)
 #save(tun_all,file='tun_all.RDA')
 
+training <- data_scaling$train
+response <- factor(training$TARGET)
+weight <- sum(as.numeric(as.character(training$TARGET)))/nrow(training)
+gc()
+weight <- c(1/(1-weight), 1/weight)
+names(weight) <- levels(response)
 
-
+# already scaled
+model <- svm(training, response, scale=FALSE, type='C-classification',
+    kernel='radial', cachesize=4000, probability=TRUE,
+    class.weights=weight, cost=1)
