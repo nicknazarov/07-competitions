@@ -121,7 +121,7 @@ write.csv(submission, 'xgboost_first_simple.csv', row.names=FALSE, quote = FALSE
 
 
 
-load(file='rfensemble_300.RDA')
+load(file='rfensemble_mtree_2_classmt.RDA')
 
 varImpPlot(rfensemble$rf1)
 
@@ -151,6 +151,20 @@ pred <- predict (rfensemble$rf4,tun_test, type="prob")
 # SAVE
 submission <- data.frame(ID = x_raw$test$ID, TARGET = pred[,2])
 write.csv(submission, 'rf_4.csv', row.names=FALSE, quote = FALSE)
+
+
+########################################################################################
+modelLookup("xgbTree")
+getModelInfo()
+
+xgb_train_1 <- train(
+  x = as.matrix(df_train %>% select(-c(Response, Id))),
+  y= df_train$Response,
+  trControl = xgb_trcontrol,
+  tuneGrid = xgb_grid_1,
+  method="xgbLinear"
+)
+
 
 ########################################################################################
 load('svm_data.RDA')
