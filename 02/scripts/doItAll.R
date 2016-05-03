@@ -115,6 +115,7 @@ rm(rfensemble)
 submission <- data.frame(ID = test$ID, TARGET = pred)
 write.csv(submission, 'xgboost_first_simple.csv', row.names=FALSE, quote = FALSE)
 
+
 #######################################################################################
 
 
@@ -136,9 +137,11 @@ confusionMatrix(formatrix)
 
 
 
-OOB.votes <- predict (rfensemble$rf2,tun_train,type="prob")
+OOB.votes <- predict (rfensemble$rf2,tun_test,type="prob")
 OOB.pred <- OOB.votes[,2];
-#OOB.pred [1:10]
+OOB.pred [1:10]
+pred[1:10]
+
 train_auc <-auc(as.numeric(as.character(tun_train$TARGET)), OOB.pred )
 print(train_auc)
 #Area under the curve: 0.8398
@@ -147,10 +150,25 @@ print(train_auc)
 #Area under the curve: 0.8242
 #Area under the curve: 0.8221
 
+# ---------------------------------------------------
+# SAVE
+
+pred_boost_rf <- pred*0.9+OOB.pred*0.1
+
+pred_boost_rf <- sqrt(pred*OOB.pred)
+
+submission <- data.frame(ID = pred[,1], TARGET = order(pred[,2])/ nrow(pred))
+write.csv(submission, 'xgboost_rank.csv', row.names=FALSE, quote = FALSE)
+
+pred_boost_rf[1:10]
+pred[1:10]
+
 pred <- predict (rfensemble$rf4,tun_test, type="prob")
 # SAVE
 submission <- data.frame(ID = x_raw$test$ID, TARGET = pred[,2])
 write.csv(submission, 'rf_4.csv', row.names=FALSE, quote = FALSE)
+
+pred <- read.csv('xgboost_rf_9_1.csv')
 
 
 ########################################################################################
