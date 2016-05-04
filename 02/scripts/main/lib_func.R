@@ -21,6 +21,8 @@ getData <- function(PATH){
 }
 
 xform_data <- function(x, N_cat) {
+  #Чистим данные - удаляем столбцы из констант, линейные комбинации столбцов, сильно коррелированные фичи
+  # категоризуем столбцы
   train <- x$train
   test <- x$test
   ncol0 <- x$ncol0
@@ -163,6 +165,7 @@ count_levels <- function (dat){
 
 
 subSample <- function (x, pct, list_of_features){
+  # Извлекаем стратифицированныю подвыборку
   # х - лист с трейн и тест
   dat <- x$train[,c(list_of_features, "TARGET")]
   inTrain <- createDataPartition(y = dat$TARGET,
@@ -184,6 +187,7 @@ subSample <- function (x, pct, list_of_features){
 
 
 print_to_file_top_fact <- function(PATH_2, train, list_of_factors){
+  # Печатаем в файл гистограммы с распределением непрерывных фичей
   pdf(file=PATH_2)
   dat <- train[,list_of_factors]
   for (i in 1:ncol(dat)){
@@ -197,6 +201,7 @@ print_to_file_top_fact <- function(PATH_2, train, list_of_factors){
 
 AUC <- function(train_actual, train_predicted, test_actual, test_predicted)
 {
+  # Подсчет аук для трейн и тест
   train_auc<-auc(as.numeric(train_actual),as.numeric(train_predicted))
   test_auc<-auc(as.numeric(test_actual),as.numeric(test_predicted))
   cat("\n\n*** what ***\ntraining:")
@@ -209,7 +214,7 @@ AUC <- function(train_actual, train_predicted, test_actual, test_predicted)
 
 
 feature_eng <- function(x){
-
+  # преобразовываем фчи из датасета, работаем только со значимыми
   #summary(x)
   x$num_var42 <- as.integer(as.character(x$num_var42))
   x$num_var4 <- as.integer(as.character(x$num_var4))
@@ -277,7 +282,7 @@ feature_eng <- function(x){
 
 
 imp_features_xgboost <- function(x, for_seed){
-  
+  # Важность фичей согласно xgboost
   set.seed(for_seed)
   options(scipen=999)
   

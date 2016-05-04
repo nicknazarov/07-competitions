@@ -17,14 +17,22 @@ FOR_SEED <- 1234
 PCT <- 0.3
 N_FACTORS <- 1:30
 
+##############################################################################################
+#### Loading data
+##############################################################################################
 cat("Getting data\n")
 print(system.time(x_raw <- getData(PATH)))
 
+##############################################################################################
+#### Transforming data - cleaning
+##############################################################################################
 cat("Transforming data\n")
 print(system.time({
   x <- xform_data(x_raw, N_CAT)
 }))
 
+##############################################################################################
+#### Feature selection
 ##############################################################################################
 #str(x$train, list.len =168 )
 
@@ -35,6 +43,9 @@ top_N_features <- list_of_features[N_FACTORS,2]
 cat("Plot features importance\n")
 plot(list_of_features[,1])
 
+##############################################################################################
+#### Print hist-s of top features into file
+##############################################################################################
 cat("Print hist for top factors\n")
 print_to_file_top_fact (PATH_2, x$train, top_N_features)
 
@@ -43,9 +54,11 @@ print_to_file_top_fact (PATH_2, x$train, top_N_features)
 
 #много сильно коррелированных фичей
 #corr <- as.data.frame(cor( x_raw$train[,top_N_features[!(top_N_features %in% c("n0","flag_big_mort")) ]]))
-#######################################################################################
 
-
+##############################################################################################
+#### Feature selection
+##############################################################################################
+# Пересекаем множества топ фичей от rf  и xgboost
 load('list_of_features.RData')
 load('importance_xgboost.RDA')
 
@@ -60,8 +73,9 @@ top_N_features <- top_N_features[!(top_N_features %in% c("imp_op_var41_efect_ult
                                                          "imp_op_var39_comer_ult1","saldo_medio_var5_ult3",
                                                          " num_venta_var44_ult1","imp_reemb_var17_ult1 ")) ]
                 
-
-
+##############################################################################################
+#### Subsample of test and train
+##############################################################################################
 #top_N_features               
 data2learn <- subSample(x, PCT, top_N_features)
 
@@ -70,6 +84,10 @@ testing <- feature_eng(data2learn$testing)
 
 #top_N_features
 summary(training)
+
+##############################################################################################
+#### Creat final datasets for learn and test
+##############################################################################################
 
 week_factors <- c(
 "flag_imp_ent_var16_ult1",  "flag_imp_op_var41_efect_ult1",  
@@ -89,10 +107,11 @@ tun_test <- tun_test[ ,!(colnames(tun_test) %in% week_factors) ]
 #save(tun_train, file="tun_train.RDA")
 #save(tun_test, file="tun_test.RDA")
 
-#######################################################################################
+##############################################################################################
+#### Creat submission for each model in ensemble list
+##############################################################################################
 
 load('rfensemble.RDA')
-
 #str(rfensemble)
 load('tun_test.RDA')
 load('tun_train.RDA')
@@ -105,23 +124,17 @@ i <-1
   }
   
 predict(rfensemble$rf1, tun_test) 
-
-
-setdiff(names(tun_train),names(tun_test ))
+#setdiff(names(tun_train),names(tun_test ))
 rm(rfensemble)
-
 # ---------------------------------------------------
 # SAVE
 submission <- data.frame(ID = test$ID, TARGET = pred)
 write.csv(submission, 'xgboost_first_simple.csv', row.names=FALSE, quote = FALSE)
 
 
-#######################################################################################
-
-
-
-
-
+##############################################################################################
+#### Evaluation of quality for rf models
+##############################################################################################
 load(file='rfensemble_mtree_2_classmt.RDA')
 
 varImpPlot(rfensemble$rf2)
@@ -135,12 +148,10 @@ OOB.votes <- predict (rfensemble$rf1,tun_train)
 formatrix <- table (OOB.votes ,as.factor(tun_train$TARGET))
 confusionMatrix(formatrix)
 
-
-
 OOB.votes <- predict (rfensemble$rf2,tun_test,type="prob")
 OOB.pred <- OOB.votes[,2];
-OOB.pred [1:10]
-pred[1:10]
+#OOB.pred [1:10]
+#pred[1:10]
 
 train_auc <-auc(as.numeric(as.character(tun_train$TARGET)), OOB.pred )
 print(train_auc)
@@ -150,50 +161,41 @@ print(train_auc)
 #Area under the curve: 0.8242
 #Area under the curve: 0.8221
 
-# ---------------------------------------------------
-# SAVE
+##############################################################################################
+#### Average and weighted av for some models
+##############################################################################################
 
 pred_boost_rf <- pred*0.9+OOB.pred*0.1
 
-pred_boost_rf <- sqrt(pred*OOB.pred)
+#pred_boost_rf <- sqrt(pred*OOB.pred)
 
-submission <- data.frame(ID = pred[,1], TARGET = order(pred[,2])/ nrow(pred))
-write.csv(submission, 'xgboost_rank.csv', row.names=FALSE, quote = FALSE)
+#submission <- data.frame(ID = pred[,1], TARGET = order(pred[,2])/ nrow(pred))
+#write.csv(submission, 'xgboost_rank.csv', row.names=FALSE, quote = FALSE)
 
+pred <- predict (rfensemble$rf4,tun_test, type="prob")
 pred_boost_rf[1:10]
 pred[1:10]
 
-pred <- predict (rfensemble$rf4,tun_test, type="prob")
 # SAVE
-submission <- data.frame(ID = x_raw$test$ID, TARGET = pred[,2])
-write.csv(submission, 'rf_4.csv', row.names=FALSE, quote = FALSE)
+#submission <- data.frame(ID = x_raw$test$ID, TARGET = pred[,2])
+#write.csv(submission, 'rf_4.csv', row.names=FALSE, quote = FALSE)
 
-pred <- read.csv('xgboost_rf_9_1.csv')
+#pred <- read.csv('xgboost_rf_9_1.csv')
 
-
-########################################################################################
+##############################################################################################
+#### Xgboost in caret
+##############################################################################################
+# Инфа о параметрах, поодерживаемых карет для xgboost
 modelLookup("xgbTree")
 getModelInfo()
 
-xgb_train_1 <- train(
-  x = as.matrix(df_train %>% select(-c(Response, Id))),
-  y= df_train$Response,
-  trControl = xgb_trcontrol,
-  tuneGrid = xgb_grid_1,
-  method="xgbLinear"
-)
-
-
-########################################################################################
+##############################################################################################
+#### Prediction and eval for svm
+##############################################################################################
+# Pity svm sucks
 load('svm_data.RDA')
 
 model <-svm_data$svmensemble$svm1
-
-
-# alternatively the traditional interface:
-x <- subset(iris, select = -Species)
-y <- Species
-model <- svm(x, y, probability = TRUE) 
 
 print(model)
 summary(model)
@@ -209,15 +211,3 @@ pred[1:100]
 #
 auc(as.numeric(as.character(tun_train$TARGET)), attr(pred, "probabilities")[,2] )
 
-#############################################################################
-
-load('tun_train.RDA')
-set.seed(1)
-sub_train <-createDataPartition(y = tun_train$TARGET,
-                                ## the outcome data are needed
-                                p = .1,
-                                ## The percentage of data in the
-                                ## training set
-                                list = FALSE)
-tr <- trainControl(method = "cv", number = 5)
-train(TARGET ~ .,data=tun_train[sub_train,] ,method="rf",trControl= tr)

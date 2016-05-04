@@ -5,6 +5,9 @@ library(dplyr)
 #library(tidyr)
 library('Matrix')
 
+##############################################################################################
+#### Loading data
+##############################################################################################
 setwd("/home/nick/01-projects/07-competitions/02/scripts/")
 load('tun_test.RDA')
 load('tun_train.RDA')
@@ -12,16 +15,20 @@ load('tun_train.RDA')
 # load in the training data
 df_train <- tun_train
 
+##############################################################################################
+#### Checking Xgboost paramets maintained in caret
+##############################################################################################
 modelLookup("xgbTree")
 
-
+##############################################################################################
+#### Preparing data
+##############################################################################################
 # ---------------------------------------------------
 # Features
 feature.names <- names(df_train)
 #feature.names <- feature.names[-grep('^ID$', feature.names)]
 feature.names <- feature.names[-grep('^TARGET$', feature.names)]
 feature.formula <- formula(paste('TARGET ~ ', paste(feature.names, collapse = ' + '), sep = ''))
-
 
 # ---------------------------------------------------
 # Matrix
@@ -33,6 +40,9 @@ sparseMatrixColNamesTrain <- colnames(data)
 dtrain <- xgb.DMatrix(data, label = as.integer(as.character(df_train[indexes, 'TARGET'])))
 rm(data)
 
+##############################################################################################
+#### Set list of parameters (kagglers have some good points about initializing)
+##############################################################################################
 set.seed(1234)
 # xgboost fitting with arbitrary parameters
 xgb_params_1 = list(
@@ -53,9 +63,9 @@ xgb_params_1 = list(
 )
 
 
-
-
-
+##############################################################################################
+#### Cross val
+##############################################################################################
 # cross-validate xgboost to get the accurate measure of error
 xgb_cv_1 = xgb.cv(params = xgb_params_1,
                   data = dtrain,
@@ -88,12 +98,10 @@ xgb_cv_1 = xgb.cv(params = xgb_params_1,
 #4
 #[180]	train-auc:0.860371+0.002363	test-auc:0.829690+0.007963
 #Stopping. Best iteration: 173
-#############################################################
 
-
-
-#t <- as.matrix(df_train %>% select(-TARGET))
-
+##############################################################################################
+#### Create a model
+##############################################################################################
 # fit the model with the arbitrary parameters specified above
 xgb_1 <- xgboost(data = dtrain,
                 params = xgb_params_1,
@@ -107,15 +115,17 @@ tun_test$TARGET <- -1
 dtest <- sparse.model.matrix(feature.formula, data = tun_test)                
 pred <- predict(xgb_1, dtest)
 
+##############################################################################################
+#### Create a submission
+##############################################################################################
 # ---------------------------------------------------
 # SAVE
 submission <- data.frame(ID = x_raw$test$ID, TARGET = pred)
 write.csv(submission, 'xgboost.csv', row.names=FALSE, quote = FALSE)
 
-
-
-
-
+##############################################################################################
+#### Plot error rate
+##############################################################################################
 # plot the AUC for the training and testing samples
 xgb_cv_1$dt %>%
   select(-contains("std")) %>%
@@ -126,9 +136,13 @@ xgb_cv_1$dt %>%
   geom_line() + 
   theme_bw()
 
-############################################################################
-#Hyperparameter search using train
-############################################################################
+
+##############################################################################################
+######################## CARET PART. IT WAS TOO SLOW #########################################
+##############################################################################################
+##############################################################################################
+#### Hyperparameter search using train
+##############################################################################################
 
 # set up the cross-validated hyper-parameter search
 xgb_grid_1 = expand.grid(
