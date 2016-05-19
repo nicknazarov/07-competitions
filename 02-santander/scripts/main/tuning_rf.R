@@ -1,12 +1,85 @@
 
-library(dplyr)
+#Проблем реализации в карет - там нет оптимизации для auc - если классы несбалансированы,
+#то  подбирать параметры для точности - совсем не тру
+
 library('randomForest')
+library('pROC')
+library('doMC')
+library('dplyr')
 ##############################################################################################
 #### Loading data
 ##############################################################################################
 setwd("/home/nick/01-projects/07-competitions/02-santander/scripts")
-load('tun_test.RDA')
-load('tun_train.RDA')
+#load('tun_test.RDA')
+#load('tun_train.RDA')
+
+train <- iris
+train$target <- ifelse(as.character(train[,5])=="virginica",0,1)
+train.target <- train$target
+
+##############################################################################################
+#### Compute AUC
+##############################################################################################
+
+##############################################################################################
+#### stratified k-fold
+##############################################################################################
+
+##############################################################################################
+#### rf modeling fo k-fold
+##############################################################################################
+
+
+##############################################################################################
+#### Define parameters
+##############################################################################################
+#Тьюнить будем 2 параметра classwt - вес класса и mtry - количетсво факторов, по которым происходит расщепление
+i <- 1
+classwt_grid <- list()
+
+for(pctResponse in c( 0.01, 0.05, 0.1, 0.3, 0.5)){
+  classwt_grid[[i]] <- c((1-pctResponse)/sum( train.target == 0),
+    pctResponse/sum( train.target == 1)) * nrow(train)
+  i <- i+1
+}
+  
+
+mtry_grid <- list(2,4,8)
+
+
+##############################################################################################
+#### Define parameters
+##############################################################################################
+
+for(mtry in mtry_grid ){ 
+  for(classwt in classwt_grid ){ 
+    
+  }
+}
+
+
+
+
+
+
+
+
+fr.param <- list (mtry = c(2,4,8)
+                  classwt = c()
+                  do.trace=TRUE, 
+                  importance=TRUE,
+                  forest=TRUE,
+                  replace=TRUE,
+                  )
+
+
+randomForest(TARGET ~ .,training,
+             ntree=ntree,
+             strata=factor( tun_train.target), mtry =2,
+             do.trace=TRUE, importance=TRUE, forest=TRUE,
+             replace=TRUE, classwt=classwt)
+
+
 
 # load in the training data
 df_train <- tun_train
