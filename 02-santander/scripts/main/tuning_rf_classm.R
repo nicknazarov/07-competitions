@@ -23,6 +23,8 @@ buildRFModel <- function(training, pctDeadbeat) {
                 .multicombine=TRUE,
                 .packages="randomForest") %dopar% {
                   tun_train.target <- as.integer(as.character(tun_train$TARGET))
+                  
+                  #error!!!!!!!!!! need changes
                   training <- tun_train
                   classwt <- c((1-pctDeadbeat)/sum( tun_train.target == 0),
                                pctDeadbeat/sum( tun_train.target == 1)) *
